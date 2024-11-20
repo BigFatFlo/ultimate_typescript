@@ -1,81 +1,11 @@
-// Variables
-let sales = 123_456_789;
-let course = "Typescript";
-let is_published = true;
-// Avoid using any type
-let level;
-level = 1;
-level = "text";
-
-// Arrays
-let numbers: number[] = [1, 2, 3];
-let array = [];
-array[0] = 1;
-array[1] = "text";
-
-console.log(sales, course, is_published, level);
-
-// Error if we don't specify the type "any"
-function render(document: any) {
-    console.log(document);
-} 
-
-render("Hello");
-
-// Tuples
-let user: [number, string] = [1, "Flo"];
-
-console.log(user);
-
-// Unfortunately this is allowed because a tuple in typescript is an array in javascript
-user.push(2);
-console.log(user);
-
-const constant = 1;
-
-// Enums
-enum Size {Small = 1, Medium, Large}
-// Declaring an enum as a constant results in a more efficient compiled code
-const enum CustomSize {Small = 'S', Medium = 'M', Large = 'L'}
-
-let mySize: Size = Size.Medium;
-let myCustomSize: CustomSize = CustomSize.Medium;
-
-console.log(mySize, myCustomSize);
-
-// Functions
-
-// Old way of using an optional parameter
-function calculateTaxOld(income: number, taxYear?: number): number {
-    let x = 1;
-    // Old way of checking if taxYear is undefined
-    if ((taxYear || 2022) < 2022 && income < 50_000) {
-        return income * x * 0.2;
-    }
-    // By default, the function returns undefined
-    return income * 0.4;
-}
-
-// Better way of using an optional parameter
-function calculateTax(income: number, taxYear: number = 2022): number {
-    let x = 1;
-    if (taxYear < 2022 && income < 50_000) {
-        return income * x * 0.2;
-    }
-    // By default, the function returns undefined
-    return income * 0.4;
-}
-
-calculateTax(10_000, 2022);
-
-// Objects
-// In typescript, we can't add fields to an object after it's created
-let employee: {
+// Type aliases
+type Employee = {
     readonly id: number;
     name: string;
-    fax?: string;
     retire: (date: Date) => void;
-} = {
+}
+
+const employee: Employee = {
     id: 1,
     name: "Flo",
     retire: (date: Date) => {
@@ -83,8 +13,124 @@ let employee: {
     }
 }
 
-// Forbidden by typescript
-// employee.id = 2;
-employee.name = "John";
-employee.fax = "123456789";
-employee.retire(new Date());
+// Union types
+function kgToLbs(weight: number | string): number {
+    if (typeof weight === "number") {
+        return weight * 2.2;
+    } else {
+        return parseInt(weight) * 2.2;
+    }
+}
+
+kgToLbs(10);
+kgToLbs("10kg");
+
+// Intersection types
+type Draggable = {
+    drag: () => void;
+}
+
+type Resizable = {
+    resize: () => void;
+}
+
+type UIWidget = Draggable & Resizable;
+
+const textBox: UIWidget = {
+    drag: () => {},
+    resize: () => {}
+}
+
+// Literal types
+type Quantity = 50 | 100;
+let quantity: Quantity = 100;
+
+// Nullable types
+function greet(name: string | null) {
+    if (name) {
+        console.log(name.toUpperCase());
+    } else {
+        console.log("Hello");
+    }
+}
+
+greet(null);
+
+// Optional chaining
+type Customer = {
+    birthday: Date;
+}
+
+function getCustomer(id: number): Customer | null {
+    return id === 0 ? null : { birthday: new Date() };
+}
+
+let customer = getCustomer(0);
+// ? = optional property access operator
+console.log(customer?.birthday.getFullYear());
+
+// Optional element access operator
+let customers: Customer[] = [];
+console.log(customers?.[0]?.birthday);
+
+// Optional call operator
+let log: any = null;
+log?.('a');
+
+let speed: number | null = null;
+let ride = {
+    // Old javascript way, but speed = 0 would get ignored because evaluated to false
+    // speed: speed || 30
+    // Nullish coalescing operator: if speed is null or undefined, then 30 is used
+    speed: speed ?? 30
+}
+
+console.log(ride.speed);
+
+// Type assertions
+// phone could be null or HTMLElement
+// Type assertion: tell the compiler that phone is actually an HTMLInputElement. No conversion occurs, it's purely informational for the compiler
+// If the type is incorrect, the program will throw an error at runtime
+let phone = document.getElementById('phone') as HTMLInputElement;
+// Another syntax for type assertion:
+// let phone = <HTMLInputElement> document.getElementById('phone');
+// Now we can access the value property
+//phone.value = "123456789";
+
+// Unknown type
+// Usin the any type, allows for any method to be called on it, which is not recommended
+// function render(document: any) {
+//     document.whatever();
+// }
+
+// Using the unknown type, the compiler will not allow any method to be called on it
+// unless it is asserted to be a certain type
+function render(document: unknown) {
+    // document.whatever();
+    // For primitive types, use typeof
+    if (typeof document === "string") {
+        console.log(document.toUpperCase());
+    }
+    // For reference types, use instanceof
+    if (document instanceof HTMLElement) {
+        document.textContent = "Hi";
+    }
+}
+
+// Never type
+function processEvents(): never {
+    while (true) {
+        console.log("Processing...");
+    }
+}
+
+function reject(message: string) {
+    throw new Error(message);
+}
+
+reject("This is a test");
+// This line will never be reached but the compiler will not throw an error because reject is infered to return a void type
+processEvents();
+// This line will never be reached and the compiler will throw an error because we told it that processEvents() will never return
+//console.log("Done");
+
